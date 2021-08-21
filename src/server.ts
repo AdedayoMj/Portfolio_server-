@@ -16,32 +16,29 @@ import otherRoutes from './routes/otherhonour'
 import currentRoutes from './routes/currentproject'
 import sightRoutes from './routes/sightandsounds'
 
-const throng = require('throng')
-const WORKERS = process.env.WEB_CONCURRENCY || 1
+import cluster from 'cluster';
+import { cpus } from 'os';
+import process from 'process';
 
+// const throng = require('throng')
+// const WORKERS = process.env.WEB_CONCURRENCY || 1
+const numCPUs = cpus().length;
+
+if (cluster.isPrimary) {
+  console.log(`Primary ${process.pid} is running`);
+
+  // Fork workers.
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+
+  cluster.on('exit', (worker, code, signal) => {
+    console.log(`worker ${worker.process.pid} died`);
+  });
+} else {
 
 const router = express();
 
-
-
-throng({ master, worker, count: WORKERS })
-
-// This will only be called once
-function master() {
-  console.log('Started master')
-
-  process.on('beforeExit', () => {
-    console.log('Master cleanup.')
-  })
-}
-
-// This will be called four times
-function worker(id: any, disconnect: () => void) {
-  let exited = false
-
-  console.log(`Started worker ${ id }`)
-  process.on('SIGTERM', shutdown)
-  process.on('SIGINT', shutdown)
 
 
 // router.use('/uploads', express.static('uploads'))
@@ -65,9 +62,8 @@ firebaseAdmin.initializeApp({
 });
 
 /** Connect to Mongo */
-
 mongoose
-    .connect(process.env.MONGODB_URI||config.mongo.url,  config.mongo.options)
+    .connect(config.mongo.url,  config.mongo.options)
     .then((result) => {
         logging.info('Mongo Connected');
     })
@@ -78,7 +74,7 @@ mongoose
 
 /** Log the request */
 router.use((req, res, next) => {
-     logging.info(`METHOD: [${req.method}] - URL: [${req.url}] - IP: [${req.socket.remoteAddress}]`);
+    logging.info(`METHOD: [${req.method}] - URL: [${req.url}] - IP: [${req.socket.remoteAddress}]`);
 
     res.on('finish', () => {
         logging.info(`METHOD: [${req.method}] - URL: [${req.url}] - STATUS: [${res.statusCode}] - IP: [${req.socket.remoteAddress}]`);
@@ -127,13 +123,5 @@ router.use((req, res, next) => {
 
 /** Listen */
 httpServer.listen(process.env.PORT|| 2121, () => logging.info(`Server is running ${config.server.host}:${process.env.PORT}`));
-
-async function shutdown() {
-    if (exited) return
-    exited = true
-
-    await new Promise(r => setTimeout(r, 300))  // simulate async cleanup work
-    console.log(`Worker ${ id } cleanup done.`)
-    disconnect()
-  }
+console.log(`Worker ${process.pid} started`);
 }

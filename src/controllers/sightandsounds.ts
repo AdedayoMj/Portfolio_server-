@@ -1,55 +1,22 @@
 
-import multer = require('multer') ;
-import multerS3 = require('multer-s3') ;
-import aws =require('aws-sdk')
 import { NextFunction, Request, Response } from 'express';
 import logging from '../config/logging';
 import SightSound from '../models/sightandsounds';
 import mongoose from 'mongoose';
-import { AwsClient } from 'google-auth-library';
-import ISightSound from '../interfaces/sightandsounds';
 
 
 
-
-
-const storage = multer.diskStorage({
-
-    destination: function (req, file, cb) {
-        const path =process.cwd() +'./uploads/';
-        cb(null, path)
-    },
-    
-    filename: function (req: any, file: any, cb: any) {
-        const fileName=file.originalname.toLowerCase().split(' ').join('-')
-        cb(null,+ Date.now()+'-' +fileName)
-    }
-})
-
-const fileFilter = (req: any,file: any,cb: any) => {
-    if(!file.originalname.match(/\.(JPG|jpg|jpeg|png|gif)$/)){
-        cb(new Error("Only image files are allowed"),false);
-    }
-     
-    cb(null, true);
-
-     
-}
-const upload = multer({storage: storage,limits:{fileSize:1024*1024*5}, fileFilter : fileFilter});
-
-
-const create = (upload.single('file'), 
-( req: Request, res: Response, next: NextFunction) => {
+const create = ( ( req: Request, res: Response, next: NextFunction) => {
     logging.info('Attempting to post picture ...');
-    if(req.files==null){
+
+    
+    if(req.file==null){
         return res.status(400).json({
                         message: 'No file uploaded'
                     });
     }
     const url=req.protocol +"://" + req.get('host')
-    let filename=req.file
-
-
+    let filename=req.file.filename
 
     const sight = new SightSound({
         _id: new mongoose.Types.ObjectId(),
