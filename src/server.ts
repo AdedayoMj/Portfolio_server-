@@ -65,8 +65,9 @@ firebaseAdmin.initializeApp({
 });
 
 /** Connect to Mongo */
+
 mongoose
-    .connect(config.mongo.url,  config.mongo.options)
+    .connect(process.env.MONGODB_URI||config.mongo.url,  config.mongo.options)
     .then((result) => {
         logging.info('Mongo Connected');
     })
