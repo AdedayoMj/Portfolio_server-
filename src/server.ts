@@ -78,7 +78,7 @@ mongoose
 
 /** Log the request */
 router.use((req, res, next) => {
-    // logging.info(`METHOD: [${req.method}] - URL: [${req.url}] - IP: [${req.socket.remoteAddress}]`);
+     logging.info(`METHOD: [${req.method}] - URL: [${req.url}] - IP: [${req.socket.remoteAddress}]`);
 
     res.on('finish', () => {
         logging.info(`METHOD: [${req.method}] - URL: [${req.url}] - STATUS: [${res.statusCode}] - IP: [${req.socket.remoteAddress}]`);
@@ -112,9 +112,9 @@ router.use('/api/article', articleRoutes);
 router.use('/api/award', awardRoutes);
 router.use('/api/member', memberRoutes);
 router.use('/api/fellow', fellowRoutes);
-// router.use('/api/otherhonours', otherRoutes);
-// router.use('/api/current', currentRoutes);
-// router.use('/api/sighsound', sightRoutes);
+router.use('/api/otherhonours', otherRoutes);
+router.use('/api/current', currentRoutes);
+router.use('/api/sighsound', sightRoutes);
 
 /** Error handling */
 router.use((req, res, next) => {
